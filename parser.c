@@ -1,9 +1,8 @@
-#include "helpers.h"
 #include "linked_list.h"
 #include "parser.h"
 #include "token.h"
 
-ParseContext *parseFile(FILE *file)
+ParseContext *parseFile(FileReader *file)
 {
     ParseContext *ctx = malloc(sizeof(ParseContext));
     ctx->currentFields = ll_new();
@@ -15,7 +14,7 @@ ParseContext *parseFile(FILE *file)
     return ctx;
 }
 
-void parseHeaders(FILE *file, ParseContext *ctx)
+void parseHeaders(FileReader *file, ParseContext *ctx)
 {
     parseFields(file, ctx);
     ctx->headers = ctx->currentFields;
@@ -23,15 +22,15 @@ void parseHeaders(FILE *file, ParseContext *ctx)
     consume(file, '\n');
 }
 
-void parseRecords(FILE *file, ParseContext *ctx)
+void parseRecords(FileReader *file, ParseContext *ctx)
 {
-    while (!feof(file))
+    while (!freof(file))
     {
         parseRecord(file, ctx);
     }
 }
 
-void parseRecord(FILE *file, ParseContext *ctx)
+void parseRecord(FileReader *file, ParseContext *ctx)
 {
     parseFields(file, ctx);
     ll_append(ctx->records, ctx->currentFields);
@@ -39,11 +38,11 @@ void parseRecord(FILE *file, ParseContext *ctx)
     consume(file, '\n');
 }
 
-void parseFields(FILE *file, ParseContext *ctx)
+void parseFields(FileReader *file, ParseContext *ctx)
 {
-    while (!feof(file) && fpeek(file) != '\n')
+    while (!freof(file) && frpeek(file) != '\n')
     {
-        if (ctx->currentFields != LL_NULL && fpeek(file) == ',')
+        if (ctx->currentFields != LL_NULL && frpeek(file) == ',')
             consume(file, ',');
 
         parseField(file, ctx);
@@ -52,7 +51,7 @@ void parseFields(FILE *file, ParseContext *ctx)
     consume(file, '\n');
 }
 
-void parseField(FILE *file, ParseContext *ctx)
+void parseField(FileReader *file, ParseContext *ctx)
 {
     const char *str = tokenizeString(file);
     if (str == 0)
@@ -60,32 +59,32 @@ void parseField(FILE *file, ParseContext *ctx)
     ll_append(ctx->currentFields, str);
 }
 
-const char *tokenizeString(FILE *file)
+const char *tokenizeString(FileReader *file)
 {
     consume(file, ' ');
 
-    if (feof(file))
+    if (freof(file))
         return 0;
 
-    if (fpeek(file) == '"')
+    if (frpeek(file) == '"')
         return tokenizeQuotedString(file);
 
     return tokenizeUnquotedString(file);
 }
 
-const char *tokenizeQuotedString(FILE *file)
+const char *tokenizeQuotedString(FileReader *file)
 {
     consume(file, '"');
 
     Token *token = token_new();
     int c;
-    while (!feof(file) && fpeek(file) != '"')
+    while (!freof(file) && frpeek(file) != '"')
     {
-        c = fgetc(file);
+        c = frget(file);
 
-        if (c == '\\' && !feof(file))
+        if (c == '\\' && !freof(file))
         {
-            int escape_sequence = fgetc(file);
+            int escape_sequence = frget(file);
             switch (escape_sequence)
             {
             case 'n':
@@ -109,11 +108,11 @@ const char *tokenizeQuotedString(FILE *file)
     return str;
 }
 
-const char *tokenizeUnquotedString(FILE *file)
+const char *tokenizeUnquotedString(FileReader *file)
 {
     Token *token = token_new();
-    while (!feof(file) && fpeek(file) != ',' && fpeek(file) != '\n')
-        token_write(token, fgetc(file));
+    while (!freof(file) && frpeek(file) != ',' && frpeek(file) != '\n')
+        token_write(token, frget(file));
 
     const char *str = token_string(token);
     free(token);
@@ -121,16 +120,8 @@ const char *tokenizeUnquotedString(FILE *file)
     return str;
 }
 
-void consume(FILE *file, char c)
+void consume(FileReader *file, char c)
 {
-    if (feof(file))
-        return;
-
-    int fc;
-    do
-    {
-        fc = fgetc(file);
-    } while (c == fc && !feof(file));
-    if (c != fc)
-        ungetc(fc, file);
+    while (!freof(file) && frpeek(file) == c)
+        frget(file);
 }

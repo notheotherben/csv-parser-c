@@ -1,10 +1,10 @@
 #include "parser.h"
-#include <stdio.h>
+#include "file_reader.h"
 
 int main()
 {
-    FILE *file = fopen("test.csv", "r");
-    if (file == 0)
+    FileReader *file = fropen("test.csv");
+    if (file->file == 0)
     {
         printf("Failed to open file\n");
         return 1;
@@ -30,6 +30,8 @@ int main()
         cursor = cursor->next;
         printf("\n");
     }
+
+    printf("Read with %d disk read operations\n", file->reads);
 
     return 0;
 }

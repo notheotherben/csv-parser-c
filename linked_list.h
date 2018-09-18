@@ -5,7 +5,7 @@
 
 typedef struct LinkedListNode
 {
-    void *value;
+    const void *value;
     struct LinkedListNode *next;
 } LinkedListNode;
 

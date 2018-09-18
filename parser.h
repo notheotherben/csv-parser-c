@@ -1,7 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include <stdio.h>
+#include "file_reader.h"
 #include "linked_list.h"
 
 typedef struct
@@ -12,19 +12,19 @@ typedef struct
 } ParseContext;
 
 // Public API
-ParseContext *parseFile(FILE *file);
+ParseContext *parseFile(FileReader *file);
 
 // Parser
-void parseHeaders(FILE *file, ParseContext *ctx);
-void parseRecords(FILE *file, ParseContext *ctx);
-void parseRecord(FILE *file, ParseContext *ctx);
-void parseFields(FILE *file, ParseContext *ctx);
-void parseField(FILE *file, ParseContext *ctx);
+void parseHeaders(FileReader *file, ParseContext *ctx);
+void parseRecords(FileReader *file, ParseContext *ctx);
+void parseRecord(FileReader *file, ParseContext *ctx);
+void parseFields(FileReader *file, ParseContext *ctx);
+void parseField(FileReader *file, ParseContext *ctx);
 
 // Tokenizer
-const char *tokenizeString(FILE *file);
-const char *tokenizeUnquotedString(FILE *file);
-const char *tokenizeQuotedString(FILE *file);
-void consume(FILE *file, char c);
+const char *tokenizeString(FileReader *file);
+const char *tokenizeUnquotedString(FileReader *file);
+const char *tokenizeQuotedString(FileReader *file);
+void consume(FileReader *file, char c);
 
 #endif
